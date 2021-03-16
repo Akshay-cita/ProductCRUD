@@ -21,24 +21,24 @@ app.get('/',function(req,res){
 });
 
 //signup
-app.post('/signup',jsonparser,function(req,res){
-
+app.post('/signup',jsonparser,async(req,res)=>{
     var newuser= new User(req.body);
-    User.findOne({email:newuser.email},function(err,user){
+    await User.findOne({email:newuser.email}).then(async (err,user)=>{
         if(user){
             return res.status(500).json({auth:false,message:"email exist"});
         }
-        console.log(newuser);
-        newuser.save((err,doc)=>{
-            if(err){
-                console.log(err);
-                return res.status(500).json({error:true,message:"User not created"});
-            }
+        else {
+            await newuser.save().then((err,doc)=>{
                 return res.status(200).json({success:true,message:"User created",user : doc});
-
+            }).catch(err =>{
+                return res.status(500).json({error:true,message:"User not created please fill required fields", error_details:err.message});
+            })     
+        }
+        
         });
     });
-});
+
+
 
 //signin
 app.post('/signin',jsonparser,function(req,res){
@@ -94,6 +94,7 @@ app.post('/product/create',jsonparser,function(req,res){
         });
     });
 });
+
 //list of products
 app.get('/product/list',function(req,res){
 
@@ -132,7 +133,6 @@ app.get('/product/:id',function(req,res){
 
 //product update 
 app.put('/product/list/:id',jsonparser,function(req,res){
-    // var updateprod= new Product(req.body);
     var newvalue={$set: {productname: req.body.productname,productcode:req.body.productcode,price:req.body.price}};
     Product.updateOne({_id:req.params.id},newvalue,function(err,data){
         if(err){
