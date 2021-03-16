@@ -108,7 +108,7 @@ app.get('/product/list',function(req,res){
 
 });
 //product delete
-app.get('/product/list/:id/delete',function(req,res){
+app.delete('/product/list/:id',function(req,res){
     Product.findByIdAndRemove(req.params.id,function(err){
         if(err){
             return res.status(500).json({error:true,message:"Product not removed"});
@@ -131,19 +131,15 @@ app.get('/product/:id',function(req,res){
 });
 
 //product update 
-app.post('/product/list/:id/edit',jsonparser,function(req,res){
-    var updateprod= new Product(req.body);
-    Product.findById(req.params.id,function(err,data){
+app.put('/product/list/:id',jsonparser,function(req,res){
+    // var updateprod= new Product(req.body);
+    var newvalue={$set: {productname: req.body.productname,productcode:req.body.productcode,price:req.body.price}};
+    Product.updateOne({_id:req.params.id},newvalue,function(err,data){
         if(err){
             return res.status(500).json({error:true,message:"Product Updation failed"});
         }
         else{
-            updateprod.save((err)=>{
-                if(err){
-                    return res.status(500).json({error:true,message:"failed tryagain"});
-                }
-                return res.status(200).json({success:true,message:"Product Updated successfully", Updated_data:doc});
-            });
+            return res.status(200).json({success:true,message:"Product Updated successfully", Updated_data:data});
             
         }
     });
