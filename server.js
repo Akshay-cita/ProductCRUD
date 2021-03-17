@@ -24,7 +24,7 @@ app.get('/',function(req,res){
 app.post('/signup',jsonparser,async (req,res)=>{
     try{
         var newuser= new User(req.body);
-        var prof=User.findOne({email:newuser.email});
+        var prof=await User.findOne({email:newuser.email});
         if(prof) throw new Error("Email already exist");
         await newuser.save();
         return res.status(200).send({success:true,message:"User created"})
