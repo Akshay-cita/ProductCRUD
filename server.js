@@ -21,58 +21,35 @@ app.get('/',function(req,res){
 });
 
 //signup
-app.post('/signup',jsonparser,async(req,res)=>{
-    var newuser= new User(req.body);
-    await User.findOne({email:newuser.email}).then(async (err,user)=>{
-        if(user){
-            return res.status(500).json({auth:false,message:"email exist"});
-        }
-        else {
-            await newuser.save().then((err,doc)=>{
-                return res.status(200).json({success:true,message:"User created",user : doc});  
-            }).catch(err =>{
-                return res.status(500).json({error:true,message:"User not created please fill required fields", error_details:err.message});
-            });
-        }
-    });
+app.post('/signup',jsonparser,async (req,res)=>{
+    try{
+        var newuser= new User(req.body);
+        var prof=User.findOne({email:newuser.email});
+        if(prof) throw new Error("Email already exist");
+        await newuser.save();
+        return res.status(200).send({success:true,message:"User created"})
+    }catch(err){
+        return res.status(500).send({error:true,message:""+ err});
+    }
 });
 
 
 
 
 //signin
-app.post('/signin',jsonparser,function(req,res){
+app.post('/signin',jsonparser,async (req,res)=>{
+    try{
+        const email=req.body.email;
+        const password=req.body.password;
+        var prof= await User.findOne({email:email});
+        if(!prof) throw new Error("User not exist");
+        if(password != prof.password) throw new Error("password is incorrect.Please try again");
+        return res.status(200).send({success:true,message:"User authenticated"});
 
-    var userCred={};
+    }catch(err){
+        return res.status(500).send({error:true,message:""+ err});
 
-    userCred.email=req.body.email;
-    userCred.password=req.body.password;
-
-    User.findOne({email:userCred.email},function(err,profile){
-
-        if(!profile){
-            return res.status(500).send("User not exist");
-        }
-        else{
-            console.log(profile);
-            console.log(profile.email);
-            console.log(profile.password);
-            if (userCred.password == profile.password && userCred.email==profile.email){
-                return res.status(200).json({success:true,message:"User authenticated"});
-            }
-            else if(userCred.password != profile.password ){
-                return res.status(500).json({error:true,message:"password is incorrect.Please try again"});
-            }
-            else if(userCred.email != profile.email){
-                return res.status(500).json({error:true,message:"Email not exist.Create account"});
-            }
-            else{
-                return res.status(500).json({error:true,message:"Unautherized access"});
-            }
-        }
-
-    });
-
+    }
 });
 
 
